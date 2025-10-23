@@ -1,0 +1,31 @@
+@startuml STM32_Embedded_Software_Flowchart
+title STM32 Dongle Lock - Firmware Flowchart
+
+skinparam defaultFontSize 13
+skinparam arrowFontSize 11
+
+start
+
+:System Initialisation;
+note right
+  • HAL & Clock Config
+  • GPIO & UART Setup
+  • Load codes from Flash
+end note
+
+:Enable UART Interrupts;
+
+partition "Main Loop" {
+  while (System Running?) is (Yes)
+    if (Command Received?) then (Yes)
+      :Process Command;
+      note right: See Command Processing detail
+    else (No)
+      :Wait for Interrupt;
+    endif
+  endwhile (No)
+}
+
+stop
+
+@enduml

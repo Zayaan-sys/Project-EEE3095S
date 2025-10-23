@@ -1,0 +1,91 @@
+@startuml PC_GUI_Application_Flowchart
+
+title PC GUI Application Flowchart
+
+start
+
+:Initialise Tkinter
+Display Connection Interface;
+
+:Show port dropdown
+Show "Refresh" button
+Show "Connect" button
+Status: "Not Connected";
+
+while (Wait for User Action) is (action received)
+  
+  if (User Action?) then (Refresh clicked)
+    :Scan serial ports
+    Update dropdown;
+    
+  elseif (Connect clicked) then
+    
+    if (Valid port selected?) then (No)
+      :Show error dialog:
+      "Select valid port";
+      
+    else (Yes)
+      :Open serial port
+      Baud: 115200
+      Wait 2 seconds;
+      
+      :Send "CONNECT\n"
+      Read response
+      (2 sec timeout);
+      
+      if (Response == "OK"?) then (No)
+        :Show error dialog:
+        "Device Not Found"
+        Close serial port
+        Return to connect screen;
+        
+      else (Yes)
+        :Main Interface
+        ====
+        Show "Get Code 1" button
+        Show "Get Code 2" button
+        Show "Get Code 3" button
+        Show "Exit" button;
+        
+        while (Wait for Button Click) is (button pressed)
+          
+          if (Button Type?) then (Get Code N)
+            :Send "GET_CODE_N"
+            Read response;
+            
+            if (Response starts with "CODE:"?) then (Yes)
+              :Extract code
+              Copy to clipboard
+              Show success dialog
+              "Code N copied";
+              
+            else (No)
+              :Show input dialog:
+              "Enter new code"
+              (password field);
+              
+              if (Code entered?) then (Yes)
+                :Send "SET_CODE_N:code"
+                Copy to clipboard
+                Show "Code Saved";
+              else (Cancel)
+              endif
+            endif
+            
+          elseif (Exit) then
+            :Send "DISCONNECT"
+            Close serial port
+            Clear clipboard
+            Close application;
+            stop
+            
+          endif
+        endwhile (continue)
+      endif
+    endif
+  endif
+endwhile (exit)
+
+stop
+
+@enduml

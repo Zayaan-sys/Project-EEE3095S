@@ -1,0 +1,39 @@
+@startuml Command_Processing
+title Command Processing Flow
+
+skinparam defaultFontSize 13
+
+start
+
+:Receive Command String;
+
+if (Command Type?) then (CONNECT)
+  :Send "OK";
+  
+elseif (GET_CODE_N)
+  if (Code N exists?) then (Yes)
+    :Send "CODE:<data>";
+  else (No)
+    :Send "NO_CODE";
+  endif
+  
+elseif (SET_CODE_N)
+  :Store code in RAM;
+  :Write to Flash;
+  :Send "SAVED";
+  
+elseif (CLEAR_ALL)
+  :Erase all codes;
+  :Update Flash;
+  :Send "CLEARED";
+  
+elseif (DISCONNECT)
+  :Send "BYE";
+  
+else (Unknown)
+  :Send "ERROR";
+endif
+
+stop
+
+@enduml

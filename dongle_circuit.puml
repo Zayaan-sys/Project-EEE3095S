@@ -1,0 +1,70 @@
+@startuml Dongle_Lock_System_Circuit_Diagram_Final
+title Dongle Lock System Circuit Diagram (Syntax Fixed)
+
+' Global Styles - All direction directives removed for maximum stability
+skinparam packageStyle rectangle
+skinparam defaultTextAlignment center
+skinparam nodesep 50
+skinparam ranksep 80
+
+' --- PC Package (Source) ---
+package "PC Host System" #E3F2FD {
+  component "Windows OS" as OS
+  component "Python GUI" as GUI
+  component "Serial Comm. Stack" as Serial
+  interface "USB Port" as USBPC
+  GUI -[hidden]-> Serial
+}
+
+' --- Connectivity Package (Bridge) ---
+' Placed next to the PC to force horizontal flow
+package "USB-Serial Converter\n(CP2102/CH340)" as CONV #FFF3E0 {
+  interface "USB Connector" as USBConv
+  port "TXD (To MCU RX)" as TXD_Conv
+  port "RXD (To MCU TX)" as RXD_Conv
+  port "GND" as GND_Conv
+  USBConv -[hidden]-> TXD_Conv
+}
+
+' --- STM32 Package (Target) ---
+' Placed next to the Converter to complete the horizontal flow
+package "STM32F446\nNucleo Board" #E8F5E9 {
+  port "PA10 (UART RX)" as PA10_RX
+  port "PA9 (UART TX)" as PA9_TX
+  port "GND" as GND_STM
+  port "+5V VBUS" as V5_STM
+  storage "Flash Memory\nSector 7" as Flash #FFF9C4
+  PA10_RX -[hidden]-> Flash
+}
+
+' ==========================================================
+' --- Connections ---
+' ==========================================================
+
+' 1. USB/Power Connections
+USBPC -[#0000FF,thickness=2]-> USBConv : USB Cable (Data/Power)
+USBPC .[#FF9800,dashed,thickness=1]-> V5_STM : **+5V USB Power**
+GND_Conv -[#607D8B,thickness=1]-> GND_STM : **Common Ground**
+
+' 2. UART Data Connections (Crossed)
+' PC (TX) -> Converter (TXD) -> MCU (RX)
+TXD_Conv -[#D32F2F,dashed,thickness=2]-> PA10_RX : TX → RX (Data from PC to MCU)
+
+' PC (RX) <- Converter (RXD) <- MCU (TX)
+PA9_TX -[#388E3C,dashed,thickness=2]-> RXD_Conv : TX → RX (Data from MCU to PC)
+
+
+' ==========================================================
+' --- Notes/Specifications ---
+' ==========================================================
+note right of "STM32F446\nNucleo Board"
+  **System Specifications**
+  ====
+  **UART Comm.:** USART1 @ 115200, 8N1
+  **Protocol:** ASCII text, Newline terminated
+  **Storage:** Flash Sector 7 (162 bytes)
+  **Capacity:** 3 Access Codes
+  **Persistence:** Magic number + Checksum
+end note
+
+@enduml
